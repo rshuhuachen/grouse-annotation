@@ -2,10 +2,17 @@
 
 #### Packages #####
 #remotes::install_github("jasongraf1/JGmisc")
-pacman::p_load(BiocManager, rtracklayer, GenomicFeatures, BiocGenerics, JGmisc, data.table)
+pacman::p_load(BiocManager, rtracklayer, GenomicFeatures, BiocGenerics, data.table)
 
 #### Genome data ####
-gff <- makeTxDbFromGFF("data/PO2979_Lyrurus_tetrix_black_grouse.annotation.gff.gz", format="gff3", organism="Lyrurus tetrix") 
+# first change scaffold names
+gff_raw <- fread("data/PO2979_Lyrurus_tetrix_black_grouse.annotation.gff.gz") 
+gff_raw$V1 <- gsub(";", "__", gff_raw$V1)
+gff_raw$V1 <- gsub("=", "_", gff_raw$V1)
+write.table(gff_raw, file = "data/PO2979_Lyrurus_tetrix_black_grouse.annotation_editedscafnames.gff", sep = "\t", col.names = FALSE, quote=F, row.names = FALSE)
+#read in new file
+gff <- makeTxDbFromGFF("data/PO2979_Lyrurus_tetrix_black_grouse.annotation_editedscafnames.gff", format="gff3", organism="Lyrurus tetrix") 
+
 
 ## divide up ###
 
