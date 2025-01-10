@@ -10,9 +10,25 @@ gff_raw <- fread("data/PO2979_Lyrurus_tetrix_black_grouse.annotation.gff.gz")
 gff_raw$V1 <- gsub(";", "__", gff_raw$V1)
 gff_raw$V1 <- gsub("=", "_", gff_raw$V1)
 write.table(gff_raw, file = "data/PO2979_Lyrurus_tetrix_black_grouse.annotation_editedscafnames.gff", sep = "\t", col.names = FALSE, quote=F, row.names = FALSE)
+
+## make a look up list to match ANN* to 'similar to' proteins
+library(stringr);library(dplyr)
+
+original = str_extract(gff_raw$V9, "ID=(.*?);")
+original <- gsub("ID=", "", original)
+original <- gsub(";", "", original)
+#original <- gsub(":.*", "", original)
+
+similar <- str_extract(gff_raw$V9, "Similar to (.*?):")
+similar <- gsub("Similar to ", "", similar)
+similar <- gsub(":", "", similar)
+
+lookup <- cbind(original, similar)
+
+write.table(lookup, file = "data/lookup_ANN_gene_id.txt", sep = "\t", col.names = FALSE, quote=F, row.names = FALSE)
+
 #read in new file
 gff <- makeTxDbFromGFF("data/PO2979_Lyrurus_tetrix_black_grouse.annotation_editedscafnames.gff", format="gff3", organism="Lyrurus tetrix") 
-
 
 ## divide up ###
 
@@ -20,6 +36,7 @@ promoters <- promoters(gff, upstream=2000, downstream=200, columns=c("tx_name", 
 TSS <- promoters(gff, upstream=300, downstream=50, columns=c("tx_name", "gene_id")) # TSS as in Laine et al., 2016. Nature Communications
 downstream <- flank(genes(gff), 10000, start=FALSE, both=FALSE, use.names=TRUE)
 upstream <- promoters(genes(gff), upstream=10000, downstream=0)
+down <- promoters(genes(gff), upstream=10000, downstream=10000)
 
 exons_gene <- unlist(exonsBy(gff, "gene")) # group exons by genes
 
